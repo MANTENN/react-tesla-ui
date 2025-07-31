@@ -1,332 +1,494 @@
-"use client"
+"use client";
 
-import { Canvas } from "@react-three/fiber"
-import { OrbitControls, Environment, Html } from "@react-three/drei"
-import { Suspense, useState } from "react"
+import { Canvas } from "@react-three/fiber";
+
 import {
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Plus,
-  BarChart3,
-  Search,
-  Phone,
-  Calendar,
-  Volume2,
-  Home,
-  Briefcase,
-  Bluetooth,
-  MoreHorizontal,
-  Wifi,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
+  OrbitControls,
+  Environment,
+  Html,
+  useGLTF,
+  Stats,
+} from "@react-three/drei";
+
+import { Suspense, useRef, useEffect, useCallback, useState } from "react";
+
+import { Search, Home, Briefcase, Wifi } from "lucide-react";
+import BottomPanel from "@/components/bottom-panel";
+import MusicCard from "@/components/music-card";
+
+import { useDisplayWidth } from "@/hooks/use-display-width";
+
+import { useFullscreen } from "@/hooks/use-fullscreen";
+import ActionCard from "@/components/navigation-action-card";
+import FSDCard from "@/components/fsd-card";
+import FullscreenButton from "@/components/fullscreen-button";
+import MapView from "@/components/map-view";
+import DrawerLayout from "@/components/drawer-layout";
+
+// Preload the 3D model
+useGLTF.preload("/tesla_roadster_2020.glb");
+
+// Custom hook for pinch to zoom
+function usePinchToZoom() {
+  const [initialDistance, setInitialDistance] = useState<number | null>(null);
+  const [initialZoom, setInitialZoom] = useState<number | null>(null);
+  const controlsRef = useRef<any>(null);
+
+  const getDistance = (touches: TouchList) => {
+    if (touches.length < 2) return null;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStart = useCallback(
+    (event: TouchEvent) => {
+      if (event.touches.length === 2) {
+        const distance = getDistance(event.touches);
+
+        if (distance && controlsRef.current) {
+          setInitialDistance(distance);
+          setInitialZoom(controlsRef.current.getDistance());
+        }
+      }
+    },
+
+    []
+  );
+
+  const handleTouchMove = useCallback(
+    (event: TouchEvent) => {
+      if (
+        event.touches.length === 2 &&
+        initialDistance &&
+        initialZoom &&
+        controlsRef.current
+      ) {
+        event.preventDefault();
+        const currentDistance = getDistance(event.touches);
+
+        if (currentDistance) {
+          const scale = currentDistance / initialDistance;
+          const newDistance = initialZoom / scale;
+
+          // Clamp zoom distance between reasonable bounds
+          const clampedDistance = Math.max(3, Math.min(15, newDistance));
+          controlsRef.current.setDistance(clampedDistance);
+        }
+      }
+    },
+
+    [initialDistance, initialZoom]
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    setInitialDistance(null);
+    setInitialZoom(null);
+  }, []);
+
+  useEffect(() => {
+    const canvas = document.querySelector("canvas");
+
+    if (canvas) {
+      canvas.addEventListener("touchstart", handleTouchStart, {
+        passive: false,
+      });
+
+      canvas.addEventListener("touchmove", handleTouchMove, {
+        passive: false,
+      });
+      canvas.addEventListener("touchend", handleTouchEnd);
+
+      return () => {
+        canvas.removeEventListener("touchstart", handleTouchStart);
+        canvas.removeEventListener("touchmove", handleTouchMove);
+        canvas.removeEventListener("touchend", handleTouchEnd);
+      };
+    }
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+
+  return controlsRef;
+}
 
 function TeslaCar() {
+  const { scene } = useGLTF("/tesla_roadster_2020.glb");
+
   return (
     <group>
-      {/* Main car body */}
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[4.2, 1.4, 9]} />
-        <meshStandardMaterial color="#D4AF37" metalness={0.9} roughness={0.1} envMapIntensity={1.5} />
-      </mesh>
+      {" "}
+      {/* Ground Plane with Feathered Edges */}
+      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        {" "}
+        <planeGeometry args={[50, 50, 64, 64]} />{" "}
+        <meshStandardMaterial
+          color="#1a1a1a"
+          transparent={true}
+          opacity={0.8}
+          side={2}
 
-      {/* Car hood - more curved */}
-      <mesh position={[0, 0.1, 3.5]} rotation={[0.1, 0, 0]}>
-        <boxGeometry args={[4, 0.8, 2.5]} />
-        <meshStandardMaterial color="#D4AF37" metalness={0.9} roughness={0.1} envMapIntensity={1.5} />
-      </mesh>
-
-      {/* Car roof/cabin */}
-      <mesh position={[0, 0.8, 0]} rotation={[0, 0, 0]}>
-        <boxGeometry args={[3.8, 1.2, 5]} />
-        <meshStandardMaterial color="#D4AF37" metalness={0.9} roughness={0.1} envMapIntensity={1.5} />
-      </mesh>
-
-      {/* Windshield */}
-      <mesh position={[0, 1.2, 2]} rotation={[-0.2, 0, 0]}>
-        <boxGeometry args={[3.6, 0.05, 2.5]} />
-        <meshStandardMaterial color="#1a1a2e" transparent opacity={0.8} metalness={0.1} roughness={0.1} />
-      </mesh>
-
-      {/* Side windows */}
-      <mesh position={[1.9, 1, 0]} rotation={[0, 0, 0.1]}>
-        <boxGeometry args={[0.05, 0.8, 3]} />
-        <meshStandardMaterial color="#1a1a2e" transparent opacity={0.8} />
-      </mesh>
-      <mesh position={[-1.9, 1, 0]} rotation={[0, 0, -0.1]}>
-        <boxGeometry args={[0.05, 0.8, 3]} />
-        <meshStandardMaterial color="#1a1a2e" transparent opacity={0.8} />
-      </mesh>
-
-      {/* Wheels */}
-      {[
-        [-1.8, -0.7, 3],
-        [1.8, -0.7, 3],
-        [-1.8, -0.7, -3],
-        [1.8, -0.7, -3],
-      ].map((pos, i) => (
-        <group key={i} position={pos}>
-          {/* Tire */}
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.8, 0.8, 0.4]} />
-            <meshStandardMaterial color="#1a1a1a" />
-          </mesh>
-          {/* Rim */}
-          <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.1]}>
-            <cylinderGeometry args={[0.6, 0.6, 0.3]} />
-            <meshStandardMaterial color="#2a2a2a" metalness={0.8} roughness={0.2} />
-          </mesh>
-          {/* Center cap */}
-          <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.2]}>
-            <cylinderGeometry args={[0.2, 0.2, 0.1]} />
-            <meshStandardMaterial color="#ff0000" />
-          </mesh>
-        </group>
-      ))}
-
+          // DoubleSide
+        />{" "}
+      </mesh>{" "}
+      {/* Original Car */}
+      <group rotation={[0, Math.PI / 4, 0]}>
+        {" "}
+        <primitive
+          object={scene}
+          scale={[2.5, 2.5, 2.5]}
+          position={[0, 0, 0]}
+        />{" "}
+      </group>{" "}
       {/* Interactive Hotspots */}
-      <Html position={[-2, 1, 3.5]} center>
+      <Html position={[-0.5, 1, 3.5]} center>
+        {" "}
         <div className="bg-black/80 text-white px-4 py-3 rounded-xl text-sm font-medium backdrop-blur-sm border border-white/20 pointer-events-auto cursor-pointer hover:bg-black/90 transition-all">
+          {" "}
           <div className="text-center">
-            <div>Open</div>
-            <div>Frunk</div>
-          </div>
-        </div>
-      </Html>
-
-      <Html position={[2, 1, -3.5]} center>
+            {" "}
+            <div>Open</div> <div>Frunk</div>{" "}
+          </div>{" "}
+        </div>{" "}
+      </Html>{" "}
+      <Html position={[0.5, 1, -3.5]} center>
+        {" "}
         <div className="bg-black/80 text-white px-4 py-3 rounded-xl text-sm font-medium backdrop-blur-sm border border-white/20 pointer-events-auto cursor-pointer hover:bg-black/90 transition-all">
+          {" "}
           <div className="text-center">
-            <div>Open</div>
-            <div>Trunk</div>
-          </div>
-        </div>
-      </Html>
-
+            {" "}
+            <div>Open</div> <div>Trunk</div>{" "}
+          </div>{" "}
+        </div>{" "}
+      </Html>{" "}
       {/* Charging port indicator */}
       <Html position={[2.2, 0.5, 1]} center>
-        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-      </Html>
-
+        {" "}
+        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>{" "}
+      </Html>{" "}
       <Html position={[2.2, 0.2, 0.5]} center>
-        <div className="text-white text-xs">⚡</div>
-      </Html>
+        {" "}
+        <div className="text-white text-xs">⚡</div>{" "}
+      </Html>{" "}
     </group>
-  )
+  );
 }
 
 export default function TeslaUI() {
-  const [isPlaying, setIsPlaying] = useState(false)
+  const controlsRef = useRef<any>(null);
+  const pinchControlsRef = usePinchToZoom();
 
-  return (
-    <div className="w-full h-screen bg-gradient-to-b from-slate-700 via-slate-800 to-slate-900 text-white relative overflow-hidden">
-      {/* Top Status Bar */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex justify-between items-center px-6 py-4 text-sm">
+  const { toggleFullscreen } = useFullscreen();
+
+  const { width } = useDisplayWidth();
+  const resetTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const [isMapVisible, setIsMapVisible] = useState(false);
+  const [cameraDistance, setCameraDistance] = useState(8);
+
+  const resetCamera = useCallback(() => {
+    if (controlsRef.current) {
+      const controls = controlsRef.current;
+
+      // Get current camera position
+      const currentAzimuthalAngle = controls.getAzimuthalAngle();
+      const currentPolarAngle = controls.getPolarAngle();
+
+      // Target angles (initial position - diagonal view)
+      // For position [cameraDistance, 6, cameraDistance], the angles are:
+      // azimuthal: Math.PI / 4 (45 degrees) - diagonal view
+      // polar: Math.atan2(Math.sqrt(cameraDistance*cameraDistance + cameraDistance*cameraDistance), 6)
+      const targetAzimuthalAngle = Math.PI / 4; // 45 degrees for diagonal view
+      const targetPolarAngle = Math.atan2(
+        Math.sqrt(2 * cameraDistance * cameraDistance),
+        6
+      );
+
+      // Animation duration in milliseconds
+      const duration = 2000;
+      const startTime = Date.now();
+
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Easing function for smooth animation
+        const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+
+        // Interpolate angles
+        const newAzimuthalAngle =
+          currentAzimuthalAngle +
+          (targetAzimuthalAngle - currentAzimuthalAngle) * easeOutCubic;
+        const newPolarAngle =
+          currentPolarAngle +
+          (targetPolarAngle - currentPolarAngle) * easeOutCubic;
+
+        // Update controls
+        controls.setAzimuthalAngle(newAzimuthalAngle);
+        controls.setPolarAngle(newPolarAngle);
+        controls.update();
+
+        // Continue animation if not complete
+        if (progress < 1) {
+          animationFrameRef.current = requestAnimationFrame(animate);
+        } else {
+          animationFrameRef.current = null;
+        }
+      };
+
+      // Start animation
+      animationFrameRef.current = requestAnimationFrame(animate);
+    }
+  }, [cameraDistance]);
+
+  const startResetTimer = useCallback(() => {
+    // Clear any existing timer
+    if (resetTimerRef.current) {
+      clearTimeout(resetTimerRef.current);
+    }
+
+    // Start a new 5-second timer
+    resetTimerRef.current = setTimeout(
+      () => {
+        resetCamera();
+      },
+
+      5000
+    );
+  }, [resetCamera]);
+
+  const stopResetTimer = useCallback(() => {
+    if (resetTimerRef.current) {
+      clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = null;
+    }
+  }, []);
+
+  const stopAnimation = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    const controls = controlsRef.current;
+
+    if (controls) {
+      const handleStart = () => {
+        stopResetTimer();
+        stopAnimation();
+      };
+
+      const handleEnd = () => {
+        startResetTimer();
+      };
+
+      // Listen for control events
+      controls.addEventListener("start", handleStart);
+      controls.addEventListener("end", handleEnd);
+
+      return () => {
+        controls.removeEventListener("start", handleStart);
+        controls.removeEventListener("end", handleEnd);
+        stopResetTimer();
+        stopAnimation();
+      };
+    }
+  }, [startResetTimer, stopResetTimer]);
+
+  // Initial camera reset after component mounts
+  useEffect(() => {
+    const timer = setTimeout(
+      () => {
+        resetCamera();
+      },
+
+      1000
+    );
+
+    return () => clearTimeout(timer);
+  }, [resetCamera]);
+
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // F11 key for full screen toggle
+      if (event.key === "F11") {
+        event.preventDefault();
+        toggleFullscreen();
+      }
+
+      // Escape key to exit full screen
+      if (event.key === "Escape") {
+        if (
+          document.fullscreenElement ||
+          (document as any).webkitFullscreenElement ||
+          (document as any).msFullscreenElement
+        ) {
+          toggleFullscreen();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
+  }, [toggleFullscreen]);
+
+  const mainContent = (
+    <div className="w-full h-screen bg-gradient-to-b from-gray-700 via-gray-800 to-gray-900 text-white flex flex-col">
+      {" "}
+      {/* Full Screen Button */}
+      <FullscreenButton /> {/* Top Status Bar */}
+      <div className="absolute top-0 left-0 right-0 w-full flex-shrink-0 z-20 flex justify-between items-center px-6 py-4 text-sm">
+        {" "}
         {/* Left side */}
         <div className="flex items-center gap-6">
+          {" "}
           <div className="flex items-center gap-3">
-            <span className="font-bold text-lg">PRND</span>
+            {" "}
+            <span className="font-bold text-lg">PRND</span>{" "}
             <div className="flex items-center gap-2">
+              {" "}
               <div className="w-10 h-4 border-2 border-white/60 rounded-sm relative">
-                <div className="absolute inset-0.5 w-[55%] bg-white rounded-sm"></div>
-              </div>
-              <span className="font-medium">59%</span>
-            </div>
-          </div>
+                {" "}
+                <div className="absolute inset-0.5 w-[55%] bg-white rounded-sm"></div>{" "}
+              </div>{" "}
+              <span className="font-medium">59%</span>{" "}
+            </div>{" "}
+          </div>{" "}
           <div className="w-6 h-6 text-blue-400">
-            <Wifi className="w-full h-full" />
-          </div>
-        </div>
-
+            {" "}
+            <Wifi className="w-full h-full" />{" "}
+          </div>{" "}
+        </div>{" "}
         {/* Center */}
         <div className="flex items-center gap-3">
+          {" "}
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 text-white">👤</div>
-            <span className="font-medium">Easy Entry</span>
-          </div>
-          <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-        </div>
-
+            {" "}
+            <div className="w-5 h-5 text-white">👤</div>{" "}
+            <span className="font-medium">Easy Entry</span>{" "}
+          </div>{" "}
+          <div className="w-4 h-4 bg-red-500 rounded-full"></div>{" "}
+        </div>{" "}
         {/* Right side */}
         <div className="flex items-center gap-6 text-sm">
-          <span className="font-medium">2:39 pm</span>
+          {" "}
+          <span className="font-medium">2:39 pm</span>{" "}
           <div className="flex items-center gap-2">
-            <span>☀️</span>
-            <span className="font-medium">85°F</span>
-          </div>
+            {" "}
+            <span>☀️</span> <span className="font-medium">85°F</span>{" "}
+          </div>{" "}
           <div className="flex items-center gap-2">
-            <span>🚗</span>
+            {" "}
+            <span>🚗</span>{" "}
             <span className="text-xs">
-              PASSENGER
-              <br />
-              AIRBAG OFF
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main 3D Car Area */}
-      <div className="absolute inset-0 pt-16 pb-48">
-        <Canvas camera={{ position: [12, 8, 12], fov: 45 }} style={{ background: "transparent" }}>
-          <Suspense fallback={null}>
-            <ambientLight intensity={0.3} />
-            <directionalLight position={[10, 10, 5]} intensity={1.2} castShadow />
-            <pointLight position={[-10, 5, -5]} intensity={0.8} color="#4a90e2" />
-            <spotLight position={[0, 15, 0]} intensity={0.5} angle={0.3} penumbra={1} />
-
-            <TeslaCar />
-
-            <Environment preset="night" />
-            <OrbitControls
-              enablePan={false}
-              enableZoom={false}
-              minPolarAngle={Math.PI / 6}
-              maxPolarAngle={Math.PI / 2.2}
-              autoRotate={false}
-              rotateSpeed={0.5}
-            />
-          </Suspense>
-        </Canvas>
-      </div>
-
-      {/* FSD Panel */}
-      <div className="absolute bottom-60 right-8 z-10">
-        <div className="bg-black/60 backdrop-blur-md rounded-2xl p-6 text-center border border-white/10">
-          <div className="text-lg font-semibold mb-2">Start FSD (Supervised)</div>
-          <div className="text-sm text-gray-400 mb-4">Navigation destination required</div>
-          <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto border-2 border-white/20">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-              <div className="w-6 h-6 bg-black rounded-full"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation Panel */}
-      <div className="absolute bottom-60 right-80 z-10">
-        <div className="bg-black/60 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-          <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
-            <Search className="w-5 h-5" />
-            <span className="font-semibold text-lg">Navigate</span>
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-4 p-3 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
-              <Home className="w-5 h-5" />
-              <span className="font-medium">Home</span>
-            </div>
-            <div className="flex items-center gap-4 p-3 hover:bg-white/10 rounded-xl transition-colors cursor-pointer">
-              <Briefcase className="w-5 h-5" />
-              <span className="font-medium">Work</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Speed Display */}
-      <div className="absolute bottom-32 left-8 z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
-            <span className="text-2xl">🚗</span>
-          </div>
-          <span className="text-6xl font-light">70</span>
-        </div>
-      </div>
-
-      {/* Bottom Panel */}
-      <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-xl border-t border-white/10">
-        {/* Music Player */}
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-sm">ALBUM</span>
-              </div>
-              <div className="flex-1">
-                <div className="font-semibold text-lg mb-1">Майбутність (feat. KALUSH)</div>
-                <div className="text-gray-400 text-sm mb-2">🎵 Артем Пивоваров</div>
-                <div className="w-80 h-1 bg-gray-600 rounded-full">
-                  <div className="w-1/3 h-full bg-white rounded-full"></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="w-12 h-12 hover:bg-white/10">
-                <SkipBack className="w-6 h-6" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-12 h-12 hover:bg-white/10"
-                onClick={() => setIsPlaying(!isPlaying)}
-              >
-                {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-              </Button>
-              <Button variant="ghost" size="icon" className="w-12 h-12 hover:bg-white/10">
-                <SkipForward className="w-6 h-6" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-12 h-12 hover:bg-white/10">
-                <Plus className="w-6 h-6" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-12 h-12 hover:bg-white/10">
-                <BarChart3 className="w-6 h-6" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-12 h-12 hover:bg-white/10">
-                <Search className="w-6 h-6" />
-              </Button>
-            </div>
-          </div>
-
-          {/* App Dock and Controls */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-white rounded-full"></div>
-              <div className="w-2 h-2 bg-white/50 rounded-full"></div>
-              <div className="w-2 h-2 bg-white/30 rounded-full"></div>
-            </div>
-
-            {/* App Icons */}
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="w-14 h-14 bg-green-600 hover:bg-green-700 rounded-xl">
-                <Phone className="w-7 h-7" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-14 h-14 bg-blue-600 hover:bg-blue-700 rounded-xl">
-                <Calendar className="w-7 h-7" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-14 h-14 bg-green-500 hover:bg-green-600 rounded-xl">
-                <div className="w-7 h-7 bg-black rounded-full flex items-center justify-center">
-                  <span className="text-green-500 font-bold text-sm">S</span>
-                </div>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-14 h-14 bg-gradient-to-br from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 rounded-xl"
-              >
-                <span className="text-2xl">♪</span>
-              </Button>
-              <Button variant="ghost" size="icon" className="w-14 h-14 bg-green-600 hover:bg-green-700 rounded-xl">
-                <span className="text-2xl">✓</span>
-              </Button>
-              <Button variant="ghost" size="icon" className="w-14 h-14 bg-white/10 hover:bg-white/20 rounded-xl">
-                <MoreHorizontal className="w-7 h-7" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-14 h-14 bg-blue-500 hover:bg-blue-600 rounded-xl">
-                <Bluetooth className="w-7 h-7" />
-              </Button>
-            </div>
-
-            {/* Volume Control */}
-            <div className="flex items-center gap-3">
-              <Volume2 className="w-6 h-6" />
-              <div className="w-20 h-1 bg-gray-600 rounded-full">
-                <div className="w-3/4 h-full bg-white rounded-full"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+              {" "}
+              PASSENGER <br /> AIRBAG OFF{" "}
+            </span>{" "}
+          </div>{" "}
+          <button
+            onClick={() => setIsMapVisible(!isMapVisible)}
+            className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+          >
+            {" "}
+            🗺️ Map{" "}
+          </button>{" "}
+        </div>{" "}
+      </div>{" "}
+      {/* Main Content Area */}
+      <DrawerLayout
+        direction="right"
+        mode="push"
+        isOpen={isMapVisible}
+        onClose={() => setIsMapVisible(false)}
+        drawerContent={<MapView />}
+      >
+        {" "}
+        <div className="flex-1 w-full h-full">
+          {" "}
+          <Canvas
+            camera={{
+              position: [cameraDistance, 6, cameraDistance],
+              fov: 50,
+            }}
+            style={{
+              background: "transparent",
+            }}
+          >
+            {" "}
+            <Stats />{" "}
+            <Suspense fallback={null}>
+              {" "}
+              <ambientLight intensity={0.4} />{" "}
+              <directionalLight
+                position={[10, 10, 5]}
+                intensity={1.5}
+                castShadow
+              />{" "}
+              <pointLight
+                position={[-10, 5, -5]}
+                intensity={1.0}
+                color="#4a90e2"
+              />{" "}
+              <spotLight
+                position={[0, 15, 0]}
+                intensity={0.8}
+                angle={0.3}
+                penumbra={1}
+              />{" "}
+              <TeslaCar /> <Environment preset="sunset" />{" "}
+              <OrbitControls
+                ref={(ref) => {
+                  controlsRef.current = ref;
+                  pinchControlsRef.current = ref;
+                }}
+                enablePan={false}
+                enableZoom={true}
+                minDistance={3}
+                maxDistance={15}
+                minPolarAngle={Math.PI / 6}
+                maxPolarAngle={Math.PI / 2.2}
+                autoRotate={false}
+                rotateSpeed={0.5}
+                enableDamping={true}
+                dampingFactor={0.05}
+                target={[0, 0, 0]}
+              />{" "}
+            </Suspense>{" "}
+          </Canvas>{" "}
+          <div className="absolute bottom-5 left-5 right-5 flex flex-row gap-4 justify-center pointer-events-none">
+            {" "}
+            <div className="flex flex-col gap-4 items-end pointer-events-auto">
+              {" "}
+              <div>
+                {" "}
+                <FSDCard />{" "}
+              </div>{" "}
+              <div className="flex flex-row gap-4">
+                {" "}
+                <MusicCard /> <ActionCard />{" "}
+              </div>{" "}
+            </div>{" "}
+          </div>{" "}
+        </div>{" "}
+      </DrawerLayout>{" "}
+      {/* Bottom Panel - Fixed at bottom */}
+      <div className="flex-shrink-0">
+        {" "}
+        <BottomPanel />{" "}
+      </div>{" "}
     </div>
-  )
+  );
+
+  return (
+    <DrawerLayout
+      direction="right"
+      mode="overlay"
+      isOpen={isMapVisible}
+      onClose={() => setIsMapVisible(false)}
+      drawerContent={<MapView />}
+    >
+      {" "}
+      {mainContent}
+    </DrawerLayout>
+  );
 }
