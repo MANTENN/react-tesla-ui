@@ -53,6 +53,12 @@ export default function RootLayout({
       lang="en"
       className={`${universalDisplay.variable} ${universalText.variable}`}
     >
+      <head>
+        <script
+          crossOrigin="anonymous"
+          src="//unpkg.com/react-scan/dist/auto.global.js"
+        />
+      </head>
       <body className={universalText.className}>{children}</body>
     </html>
   );
