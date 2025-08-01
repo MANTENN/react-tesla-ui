@@ -115,11 +115,9 @@ function TeslaCar() {
 
   return (
     <group>
-      {" "}
       {/* Ground Plane with Feathered Edges */}
       <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        {" "}
-        <planeGeometry args={[50, 50, 64, 64]} />{" "}
+        <planeGeometry args={[50, 50, 64, 64]} />
         <meshStandardMaterial
           color="#1a1a1a"
           transparent={true}
@@ -127,47 +125,38 @@ function TeslaCar() {
           side={2}
 
           // DoubleSide
-        />{" "}
-      </mesh>{" "}
+        />
+      </mesh>
       {/* Original Car */}
       <group rotation={[0, Math.PI / 4, 0]}>
-        {" "}
         <primitive
           object={scene}
           scale={[2.5, 2.5, 2.5]}
           position={[0, 0, 0]}
-        />{" "}
-      </group>{" "}
+        />
+      </group>
       {/* Interactive Hotspots */}
       <Html position={[-0.5, 1, 3.5]} center>
-        {" "}
         <div className="bg-black/80 text-white px-4 py-3 rounded-xl text-sm font-medium backdrop-blur-sm border border-white/20 pointer-events-auto cursor-pointer hover:bg-black/90 transition-all">
-          {" "}
           <div className="text-center">
-            {" "}
-            <div>Open</div> <div>Frunk</div>{" "}
-          </div>{" "}
-        </div>{" "}
-      </Html>{" "}
+            <div>Open</div> <div>Frunk</div>
+          </div>
+        </div>
+      </Html>
       <Html position={[0.5, 1, -3.5]} center>
-        {" "}
         <div className="bg-black/80 text-white px-4 py-3 rounded-xl text-sm font-medium backdrop-blur-sm border border-white/20 pointer-events-auto cursor-pointer hover:bg-black/90 transition-all">
-          {" "}
           <div className="text-center">
-            {" "}
-            <div>Open</div> <div>Trunk</div>{" "}
-          </div>{" "}
-        </div>{" "}
-      </Html>{" "}
+            <div>Open</div> <div>Trunk</div>
+          </div>
+        </div>
+      </Html>
       {/* Charging port indicator */}
       <Html position={[2.2, 0.5, 1]} center>
-        {" "}
-        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>{" "}
-      </Html>{" "}
+        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+      </Html>
       <Html position={[2.2, 0.2, 0.5]} center>
-        {" "}
-        <div className="text-white text-xs">⚡</div>{" "}
-      </Html>{" "}
+        <div className="text-white text-xs">⚡</div>
+      </Html>
     </group>
   );
 }
@@ -334,66 +323,52 @@ export default function TeslaUI() {
 
   const mainContent = (
     <div className="w-full h-screen bg-gradient-to-b from-gray-700 via-gray-800 to-gray-900 text-white flex flex-col">
-      {" "}
       {/* Full Screen Button */}
       <FullscreenButton /> {/* Top Status Bar */}
       <div className="absolute top-0 left-0 right-0 w-full flex-shrink-0 z-20 flex justify-between items-center px-6 py-4 text-sm">
-        {" "}
         {/* Left side */}
         <div className="flex items-center gap-6">
-          {" "}
           <div className="flex items-center gap-3">
-            {" "}
-            <span className="font-bold text-lg">PRND</span>{" "}
+            <span className="font-bold text-lg">PRND</span>
             <div className="flex items-center gap-2">
-              {" "}
               <div className="w-10 h-4 border-2 border-white/60 rounded-sm relative">
-                {" "}
-                <div className="absolute inset-0.5 w-[55%] bg-white rounded-sm"></div>{" "}
-              </div>{" "}
-              <span className="font-medium">59%</span>{" "}
-            </div>{" "}
-          </div>{" "}
+                <div className="absolute inset-0.5 w-[55%] bg-white rounded-sm"></div>
+              </div>
+              <span className="font-medium">59%</span>
+            </div>
+          </div>
           <div className="w-6 h-6 text-blue-400">
-            {" "}
-            <Wifi className="w-full h-full" />{" "}
-          </div>{" "}
-        </div>{" "}
+            <Wifi className="w-full h-full" />
+          </div>
+        </div>
         {/* Center */}
         <div className="flex items-center gap-3">
-          {" "}
           <div className="flex items-center gap-2">
-            {" "}
-            <div className="w-5 h-5 text-white">👤</div>{" "}
-            <span className="font-medium">Easy Entry</span>{" "}
-          </div>{" "}
-          <div className="w-4 h-4 bg-red-500 rounded-full"></div>{" "}
-        </div>{" "}
+            <div className="w-5 h-5 text-white">👤</div>
+            <span className="font-medium">Easy Entry</span>
+          </div>
+          <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+        </div>
         {/* Right side */}
         <div className="flex items-center gap-6 text-sm">
-          {" "}
-          <span className="font-medium">2:39 pm</span>{" "}
+          <span className="font-medium">2:39 pm</span>
           <div className="flex items-center gap-2">
-            {" "}
-            <span>☀️</span> <span className="font-medium">85°F</span>{" "}
-          </div>{" "}
+            <span>☀️</span> <span className="font-medium">85°F</span>
+          </div>
           <div className="flex items-center gap-2">
-            {" "}
-            <span>🚗</span>{" "}
+            <span>🚗</span>
             <span className="text-xs">
-              {" "}
-              PASSENGER <br /> AIRBAG OFF{" "}
-            </span>{" "}
-          </div>{" "}
+              PASSENGER <br /> AIRBAG OFF
+            </span>
+          </div>
           <button
             onClick={() => setIsMapVisible(!isMapVisible)}
             className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
           >
-            {" "}
-            🗺️ Map{" "}
-          </button>{" "}
-        </div>{" "}
-      </div>{" "}
+            🗺️ Map
+          </button>
+        </div>
+      </div>
       {/* Main Content Area */}
       <DrawerLayout
         direction="right"
@@ -402,9 +377,7 @@ export default function TeslaUI() {
         onClose={() => setIsMapVisible(false)}
         drawerContent={<MapView />}
       >
-        {" "}
         <div className="flex-1 w-full h-full">
-          {" "}
           <Canvas
             camera={{
               position: [cameraDistance, 6, cameraDistance],
@@ -414,28 +387,27 @@ export default function TeslaUI() {
               background: "transparent",
             }}
           >
-            {" "}
-            <Stats />{" "}
+            <Stats />
             <Suspense fallback={null}>
-              {" "}
-              <ambientLight intensity={0.4} />{" "}
+              <ambientLight intensity={0.4} />
               <directionalLight
                 position={[10, 10, 5]}
                 intensity={1.5}
                 castShadow
-              />{" "}
+              />
               <pointLight
                 position={[-10, 5, -5]}
                 intensity={1.0}
                 color="#4a90e2"
-              />{" "}
+              />
               <spotLight
                 position={[0, 15, 0]}
                 intensity={0.8}
                 angle={0.3}
                 penumbra={1}
-              />{" "}
-              <TeslaCar /> <Environment preset="sunset" />{" "}
+              />
+              <TeslaCar />
+              <Environment preset="sunset" />
               <OrbitControls
                 ref={(ref) => {
                   controlsRef.current = ref;
@@ -452,30 +424,26 @@ export default function TeslaUI() {
                 enableDamping={true}
                 dampingFactor={0.05}
                 target={[0, 0, 0]}
-              />{" "}
-            </Suspense>{" "}
-          </Canvas>{" "}
+              />
+            </Suspense>
+          </Canvas>
           <div className="absolute bottom-5 left-5 right-5 flex flex-row gap-4 justify-center pointer-events-none">
-            {" "}
             <div className="flex flex-col gap-4 items-end pointer-events-auto">
-              {" "}
               <div>
-                {" "}
-                <FSDCard />{" "}
-              </div>{" "}
+                <FSDCard />
+              </div>
               <div className="flex flex-row gap-4">
-                {" "}
-                <MusicCard /> <ActionCard />{" "}
-              </div>{" "}
-            </div>{" "}
-          </div>{" "}
-        </div>{" "}
-      </DrawerLayout>{" "}
+                <MusicCard />
+                <ActionCard />
+              </div>
+            </div>
+          </div>
+        </div>
+      </DrawerLayout>
       {/* Bottom Panel - Fixed at bottom */}
       <div className="flex-shrink-0">
-        {" "}
-        <BottomPanel />{" "}
-      </div>{" "}
+        <BottomPanel />
+      </div>
     </div>
   );
 
@@ -487,7 +455,6 @@ export default function TeslaUI() {
       onClose={() => setIsMapVisible(false)}
       drawerContent={<MapView />}
     >
-      {" "}
       {mainContent}
     </DrawerLayout>
   );

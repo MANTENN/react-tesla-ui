@@ -15,7 +15,7 @@ export default function FSDCard() {
       className="bottom-5 left-5 right-5 flex flex-col gap-1"
       style={{ maxWidth: width / 3.2 / 1.8, width: "1000px" }}
     >
-      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 text-start shadow-lg flex flex-row gap-4 items-center justify-between">
+      <div className="bg-gray-700/80 backdrop-blur-md rounded-2xl p-4 text-start shadow-lg flex flex-row gap-4 items-center justify-between">
         <div>
           <div className="text-lg font-semibold mb-1">
             Start FSD (Supervised)

@@ -22,7 +22,7 @@ export default function actionCard() {
 
   return (
     <div
-      className="bg-white/10 backdrop-blur-md border-t border-white/10 shadow-lg rounded-xl"
+      className="bg-gray-700/80 backdrop-blur-md border-t border-white/10 shadow-lg rounded-xl"
       style={{ maxWidth: width / 3.2, width: "1000px" }}
     >
       <div className="flex flex-col w-full">

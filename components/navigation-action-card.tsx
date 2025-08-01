@@ -18,7 +18,7 @@ export default function ActionCard() {
       className="bottom-5 left-5 right-5 flex"
       style={{ maxWidth: width / 3.2 / 1.8, width: "1000px" }}
     >
-      <div className="bg-white/10 backdrop-blur-md border-t border-white/10 rounded-xl flex flex-col shadow-lg w-full items">
+      <div className="bg-gray-700/80 backdrop-blur-md border-t border-white/10 rounded-xl flex flex-col shadow-lg w-full items">
         <Button
           variant="card"
           className="w-full justify-start h-14 flex items-center text-lg font-semibold"
